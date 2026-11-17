@@ -1,0 +1,734 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Learning Coach - Smart Quiz</title>
+
+<style>
+:root {
+  --primary:#3157d5;
+  --dark:#172554;
+  --bg:#f3f6fc;
+  --white:#ffffff;
+  --green:#16a36a;
+  --red:#dc4545;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:#1e293b;
+}
+header {
+  background:linear-gradient(120deg,#1e3a8a,#4169e1);
+  color:white;
+  padding:24px 7%;
+}
+header h1 {margin:0;font-size:25px}
+header p {margin:8px 0 0;color:#dbeafe}
+.container {
+  max-width:900px;
+  margin:28px auto;
+  padding:0 16px;
+}
+.card {
+  background:white;
+  padding:25px;
+  border-radius:16px;
+  box-shadow:0 5px 20px #1e293b10;
+  margin-bottom:20px;
+}
+h2 {margin-top:0;color:var(--dark)}
+input,select {
+  padding:12px;
+  width:100%;
+  border:1px solid #cbd5e1;
+  border-radius:9px;
+  margin:8px 0 16px;
+  font-size:15px;
+}
+button {
+  background:var(--primary);
+  color:white;
+  padding:12px 20px;
+  border:0;
+  border-radius:9px;
+  cursor:pointer;
+  font-size:15px;
+  font-weight:bold;
+}
+button:hover {opacity:.88}
+button:disabled {opacity:.4;cursor:not-allowed}
+.secondary {background:#64748b}
+.green {background:var(--green)}
+.hidden {display:none!important}
+.top-info {
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.pill {
+  background:#eaf0ff;
+  color:#3157d5;
+  padding:10px 14px;
+  border-radius:20px;
+  font-weight:bold;
+}
+.progress {
+  background:#e2e8f0;
+  height:9px;
+  border-radius:20px;
+  overflow:hidden;
+  margin:15px 0;
+}
+.progress-bar {
+  height:100%;
+  background:var(--primary);
+  width:0%;
+  transition:.3s;
+}
+.option {
+  display:block;
+  border:1px solid #dbe2ef;
+  padding:14px;
+  margin:10px 0;
+  border-radius:10px;
+  cursor:pointer;
+}
+.option:hover {background:#f1f5ff}
+.option input {width:auto;margin:0 9px 0 0}
+.option.correct {
+  border-color:var(--green);
+  background:#e9f9f0;
+}
+.option.wrong {
+  border-color:var(--red);
+  background:#fff0f0;
+}
+.feedback {
+  padding:18px;
+  border-radius:12px;
+  margin:18px 0;
+  background:#eff6ff;
+  line-height:1.7;
+}
+.feedback h3 {margin-top:0}
+.actions {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:20px;
+}
+.score {
+  font-size:42px;
+  font-weight:bold;
+  color:var(--primary);
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+th,td {
+  padding:12px;
+  border-bottom:1px solid #e2e8f0;
+  text-align:left;
+}
+footer {
+  text-align:center;
+  padding:25px;
+  color:#64748b;
+}
+@media(max-width:600px) {
+  header {padding:20px}
+  .card {padding:18px}
+  header h1 {font-size:21px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎓 AI Learning Coach</h1>
+  <p>Smart Quiz | Belajar kapan saja, berkembang setiap saat.</p>
+</header>
+
+<main class="container">
+
+<!-- HALAMAN AWAL -->
+<section id="home" class="card">
+  <h2>Selamat datang!</h2>
+  <p>Isi identitas dan pilih mata pelajaran untuk memulai latihan.</p>
+
+  <label>Nama siswa</label>
+  <input id="studentName" placeholder="Masukkan nama kamu">
+
+  <label>Kelas</label>
+  <input id="studentClass" placeholder="Contoh: X.3">
+
+  <label>Mata pelajaran</label>
+  <select id="subject">
+    <option value="math">Matematika</option>
+    <option value="english">Bahasa Inggris</option>
+  </select>
+
+  <label>Jumlah soal</label>
+  <select id="questionCount">
+    <option value="5">5 soal</option>
+    <option value="10">10 soal</option>
+  </select>
+
+  <button onclick="startQuiz()">Mulai Latihan →</button>
+</section>
+
+<!-- HALAMAN SOAL -->
+<section id="quiz" class="card hidden">
+  <div class="top-info">
+    <span class="pill" id="subjectLabel">Matematika</span>
+    <span class="pill" id="timer">15:00</span>
+    <span class="pill" id="questionNumber">Soal 1</span>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <h2 id="question"></h2>
+  <div id="options"></div>
+
+  <div id="feedback" class="feedback hidden"></div>
+
+  <div class="actions">
+    <button id="checkBtn" onclick="checkAnswer()">Periksa Jawaban</button>
+    <button id="nextBtn" class="green hidden" onclick="nextQuestion()">Soal Berikutnya →</button>
+  </div>
+</section>
+
+<!-- HASIL -->
+<section id="result" class="card hidden">
+  <h2>Hasil Latihan 🎉</h2>
+  <p id="resultName"></p>
+  <div class="score" id="finalScore">0</div>
+  <p id="resultMessage"></p>
+
+  <h3>Rekomendasi belajar</h3>
+  <p id="recommendation"></p>
+
+  <div class="actions">
+    <button onclick="restartQuiz()">Latihan Lagi</button>
+    <button class="secondary" onclick="showHistory()">Lihat Riwayat</button>
+    <button class="secondary" onclick="backHome()">Menu Utama</button>
+  </div>
+</section>
+
+<!-- RIWAYAT -->
+<section id="history" class="card hidden">
+  <h2>📊 Riwayat Nilai</h2>
+  <div id="historyContent"></div>
+  <button class="secondary" onclick="backHome()">Kembali</button>
+</section>
+
+</main>
+
+<footer>
+  AI Learning Coach © 2026 | Personalized Learning
+</footer>
+
+<script>
+
+// =================================
+// BANK SOAL MATEMATIKA
+// =================================
+
+const mathQuestions = [
+{
+ q:"Jika 2x + 6 = 16, nilai x adalah ...",
+ o:["3","4","5","6"],
+ a:2,
+ explain:"Jawaban benar adalah 5.",
+ steps:"1. 2x + 6 = 16\n2. Pindahkan 6 ke kanan: 2x = 16 - 6\n3. 2x = 10\n4. Bagi kedua ruas dengan 2: x = 5"
+},
+{
+ q:"Akar-akar dari persamaan x² - 5x + 6 = 0 adalah ...",
+ o:["1 dan 6","2 dan 3","-2 dan -3","1 dan 5"],
+ a:1,
+ explain:"Jawaban benar adalah 2 dan 3.",
+ steps:"1. x² - 5x + 6 = 0\n2. Cari dua bilangan yang hasil kalinya 6 dan jumlahnya -5.\n3. Bilangan tersebut adalah -2 dan -3.\n4. (x - 2)(x - 3) = 0\n5. x = 2 atau x = 3."
+},
+{
+ q:"Hasil dari √144 + √25 adalah ...",
+ o:["12","15","17","19"],
+ a:2,
+ explain:"Jawaban benar adalah 17.",
+ steps:"1. √144 = 12\n2. √25 = 5\n3. 12 + 5 = 17."
+},
+{
+ q:"Sebuah barang seharga Rp80.000 mendapat diskon 25%. Harga setelah diskon adalah ...",
+ o:["Rp50.000","Rp55.000","Rp60.000","Rp65.000"],
+ a:2,
+ explain:"Jawaban benar adalah Rp60.000.",
+ steps:"1. Diskon = 25% × Rp80.000\n2. Diskon = Rp20.000\n3. Harga akhir = Rp80.000 - Rp20.000\n4. Harga akhir = Rp60.000."
+},
+{
+ q:"Diketahui 2x + y = 11 dan x - y = 1. Nilai x + y adalah ...",
+ o:["5","6","7","8"],
+ a:2,
+ explain:"Jawaban benar adalah 7.",
+ steps:"1. x - y = 1, sehingga y = x - 1.\n2. Substitusikan ke 2x + y = 11.\n3. 2x + x - 1 = 11.\n4. 3x = 12, sehingga x = 4.\n5. y = 3.\n6. x + y = 4 + 3 = 7."
+},
+{
+ q:"Nilai dari 3² + 4² adalah ...",
+ o:["7","12","25","49"],
+ a:2,
+ explain:"Jawaban benar adalah 25.",
+ steps:"1. 3² = 3 × 3 = 9.\n2. 4² = 4 × 4 = 16.\n3. 9 + 16 = 25."
+},
+{
+ q:"Jika f(x) = 2x² - 3, maka f(2) adalah ...",
+ o:["3","5","7","9"],
+ a:2,
+ explain:"Jawaban benar adalah 5? Perhatikan perhitungannya: 2(2²) - 3 = 8 - 3 = 5.",
+ steps:"1. f(x) = 2x² - 3.\n2. Masukkan x = 2.\n3. f(2) = 2(2²) - 3.\n4. = 2(4) - 3 = 5."
+},
+{
+ q:"Rata-rata dari 6, 8, 10, 12, dan 14 adalah ...",
+ o:["8","9","10","12"],
+ a:2,
+ explain:"Jawaban benar adalah 10.",
+ steps:"1. Jumlahkan semua data: 6 + 8 + 10 + 12 + 14 = 50.\n2. Banyak data = 5.\n3. Rata-rata = 50 ÷ 5 = 10."
+},
+{
+ q:"Hasil dari 2/3 + 1/6 adalah ...",
+ o:["1/2","2/3","5/6","1"],
+ a:2,
+ explain:"Jawaban benar adalah 5/6.",
+ steps:"1. Samakan penyebut menjadi 6.\n2. 2/3 = 4/6.\n3. 4/6 + 1/6 = 5/6."
+},
+{
+ q:"Keliling persegi dengan panjang sisi 9 cm adalah ...",
+ o:["18 cm","27 cm","36 cm","81 cm"],
+ a:2,
+ explain:"Jawaban benar adalah 36 cm.",
+ steps:"1. Rumus keliling persegi = 4 × sisi.\n2. K = 4 × 9.\n3. K = 36 cm."
+}
+];
+
+// =================================
+// BANK SOAL BAHASA INGGRIS
+// =================================
+
+const englishQuestions = [
+{
+ q:"She _____ to school every morning.",
+ o:["go","goes","going","gone"],
+ a:1,
+ explain:"Jawaban benar adalah goes.",
+ steps:"1. Subjeknya adalah She.\n2. Kalimat menggunakan Simple Present Tense.\n3. Untuk he, she, dan it, kata kerja ditambahkan -s atau -es.\n4. Jadi, go berubah menjadi goes."
+},
+{
+ q:"They _____ football yesterday.",
+ o:["play","plays","played","playing"],
+ a:2,
+ explain:"Jawaban benar adalah played.",
+ steps:"1. Yesterday menunjukkan kejadian masa lampau.\n2. Gunakan Simple Past Tense.\n3. Play adalah regular verb.\n4. Tambahkan -ed menjadi played."
+},
+{
+ q:"Choose the correct sentence.",
+ o:[
+   "He don't like coffee.",
+   "He doesn't likes coffee.",
+   "He doesn't like coffee.",
+   "He not like coffee."
+ ],
+ a:2,
+ explain:"Jawaban benar adalah He doesn't like coffee.",
+ steps:"1. Subjek He menggunakan doesn't.\n2. Setelah doesn't, kata kerja kembali ke bentuk dasar.\n3. Jadi, kalimatnya: He doesn't like coffee."
+},
+{
+ q:"What is the synonym of 'Beautiful'?",
+ o:["Ugly","Pretty","Bad","Difficult"],
+ a:1,
+ explain:"Jawaban benar adalah Pretty.",
+ steps:"Beautiful berarti indah atau cantik.\nPretty juga memiliki arti cantik atau menarik.\nKeduanya memiliki makna yang hampir sama."
+},
+{
+ q:"I _____ studying English right now.",
+ o:["am","is","are","be"],
+ a:0,
+ explain:"Jawaban benar adalah am.",
+ steps:"1. Right now menunjukkan kegiatan yang sedang berlangsung.\n2. Gunakan Present Continuous Tense.\n3. Polanya: Subject + am/is/are + Verb-ing.\n4. Subjek I menggunakan am."
+},
+{
+ q:"The opposite of 'Expensive' is ...",
+ o:["Cheap","Rich","Large","Strong"],
+ a:0,
+ explain:"Jawaban benar adalah Cheap.",
+ steps:"Expensive berarti mahal.\nCheap berarti murah.\nKeduanya merupakan kata yang berlawanan makna."
+},
+{
+ q:"We _____ finished our homework.",
+ o:["has","have","having","had been"],
+ a:1,
+ explain:"Jawaban benar adalah have.",
+ steps:"1. Kalimat menggunakan Present Perfect Tense.\n2. Polanya: Subject + have/has + Verb 3.\n3. Subjek We menggunakan have.\n4. Jadi: We have finished our homework."
+},
+{
+ q:"My father is a teacher. _____ works at a school.",
+ o:["She","They","He","It"],
+ a:2,
+ explain:"Jawaban benar adalah He.",
+ steps:"1. My father berarti ayah saya.\n2. Father adalah laki-laki tunggal.\n3. Kata ganti orang yang tepat adalah He."
+},
+{
+ q:"Which sentence uses Future Tense?",
+ o:[
+   "I eat rice.",
+   "I ate rice.",
+   "I am eating rice.",
+   "I will eat rice."
+ ],
+ a:3,
+ explain:"Jawaban benar adalah I will eat rice.",
+ steps:"1. Future Tense digunakan untuk menyatakan kegiatan yang akan datang.\n2. Polanya: Subject + will + Verb 1.\n3. Kalimat yang sesuai adalah I will eat rice."
+},
+{
+ q:"Read: 'Rina likes reading books because she wants to learn new things.' Why does Rina like reading books?",
+ o:[
+   "Because she wants to sleep.",
+   "Because she wants to learn new things.",
+   "Because she dislikes school.",
+   "Because she wants to play."
+ ],
+ a:1,
+ explain:"Jawaban benar adalah Because she wants to learn new things.",
+ steps:"1. Baca teks dengan teliti.\n2. Cari kalimat yang menjelaskan alasan Rina membaca buku.\n3. Teks menyebutkan: because she wants to learn new things.\n4. Pilih jawaban yang sesuai dengan informasi tersebut."
+}
+];
+
+// =================================
+// VARIABEL APLIKASI
+// =================================
+
+let questions = [];
+let current = 0;
+let score = 0;
+let answers = [];
+let student = {};
+let timeLeft = 900;
+let timerInterval = null;
+let finished = false;
+
+// =================================
+// MEMULAI LATIHAN
+// =================================
+
+function startQuiz() {
+  const name = document.getElementById("studentName").value.trim();
+  const kelas = document.getElementById("studentClass").value.trim();
+  const subject = document.getElementById("subject").value;
+  const count = Number(document.getElementById("questionCount").value);
+
+  if (!name || !kelas) {
+    alert("Nama dan kelas wajib diisi!");
+    return;
+  }
+
+  student = {name, kelas, subject};
+
+  const bank = subject === "math"
+    ? mathQuestions
+    : englishQuestions;
+
+  questions = [...bank]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count);
+
+  current = 0;
+  score = 0;
+  answers = [];
+  timeLeft = 900;
+  finished = false;
+
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("history").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+
+  document.getElementById("subjectLabel").textContent =
+    subject === "math" ? "Matematika" : "Bahasa Inggris";
+
+  showQuestion();
+  startTimer();
+}
+
+// =================================
+// MENAMPILKAN SOAL
+// =================================
+
+function showQuestion() {
+  const q = questions[current];
+
+  document.getElementById("questionNumber").textContent =
+    `Soal ${current + 1} / ${questions.length}`;
+
+  document.getElementById("question").textContent = q.q;
+
+  document.getElementById("progressBar").style.width =
+    `${((current + 1) / questions.length) * 100}%`;
+
+  const options = document.getElementById("options");
+  options.innerHTML = "";
+
+  q.o.forEach((option, index) => {
+    const label = document.createElement("label");
+    label.className = "option";
+
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "answer";
+    radio.value = index;
+
+    const span = document.createElement("span");
+    span.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+
+    label.appendChild(radio);
+    label.appendChild(span);
+    options.appendChild(label);
+  });
+
+  document.getElementById("feedback").classList.add("hidden");
+  document.getElementById("checkBtn").classList.remove("hidden");
+  document.getElementById("nextBtn").classList.add("hidden");
+  document.getElementById("checkBtn").disabled = false;
+}
+
+// =================================
+// MEMERIKSA JAWABAN
+// =================================
+
+function checkAnswer() {
+  const selected = document.querySelector(
+    'input[name="answer"]:checked'
+  );
+
+  if (!selected) {
+    alert("Pilih jawaban terlebih dahulu!");
+    return;
+  }
+
+  const chosen = Number(selected.value);
+  const q = questions[current];
+  const correct = chosen === q.a;
+
+  answers[current] = chosen;
+
+  if (correct) score++;
+
+  document.querySelectorAll('input[name="answer"]').forEach(input => {
+    input.disabled = true;
+
+    const label = input.parentElement;
+    const value = Number(input.value);
+
+    if (value === q.a) {
+      label.classList.add("correct");
+    } else if (value === chosen) {
+      label.classList.add("wrong");
+    }
+  });
+
+  const feedback = document.getElementById("feedback");
+
+  feedback.innerHTML = `
+    <h3>${correct ? "✅ Jawaban Benar!" : "❌ Jawaban Belum Tepat"}</h3>
+    <p><b>Jawaban yang benar:</b> ${q.o[q.a]}</p>
+    <p><b>Pembahasan:</b><br>${q.explain}</p>
+    <p><b>Cara mengerjakan:</b><br>${q.steps.replace(/\n/g,"<br>")}</p>
+  `;
+
+  feedback.classList.remove("hidden");
+
+  document.getElementById("checkBtn").classList.add("hidden");
+
+  const next = document.getElementById("nextBtn");
+  next.classList.remove("hidden");
+
+  next.textContent = current === questions.length - 1
+    ? "Lihat Hasil →"
+    : "Soal Berikutnya →";
+}
+
+// =================================
+// SOAL SELANJUTNYA
+// =================================
+
+function nextQuestion() {
+  current++;
+
+  if (current < questions.length) {
+    showQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+// =================================
+// TIMER
+// =================================
+
+function startTimer() {
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    if (finished) return;
+
+    timeLeft--;
+
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+
+    document.getElementById("timer").textContent =
+      `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+
+    if (timeLeft <= 0) {
+      finishQuiz();
+    }
+  }, 1000);
+}
+
+// =================================
+// HASIL AKHIR
+// =================================
+
+function finishQuiz() {
+  if (finished) return;
+
+  finished = true;
+  clearInterval(timerInterval);
+
+  const final = Math.round(score / questions.length * 100);
+
+  const history = JSON.parse(
+    localStorage.getItem("quizHistory") || "[]"
+  );
+
+  const record = {
+    name:student.name,
+    kelas:student.kelas,
+    subject:student.subject,
+    score:final,
+    correct:score,
+    total:questions.length,
+    date:new Date().toLocaleString("id-ID")
+  };
+
+  history.unshift(record);
+
+  localStorage.setItem(
+    "quizHistory",
+    JSON.stringify(history.slice(0,30))
+  );
+
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  document.getElementById("resultName").textContent =
+    `${student.name} | Kelas ${student.kelas}`;
+
+  document.getElementById("finalScore").textContent = final;
+
+  document.getElementById("resultMessage").textContent =
+    `${score} dari ${questions.length} soal dijawab benar.`;
+
+  let recommendation = "";
+
+  if (final >= 85) {
+    recommendation =
+      "Hebat! Pertahankan kemampuanmu dan coba soal dengan tingkat kesulitan lebih tinggi.";
+  } else if (final >= 70) {
+    recommendation =
+      "Kemampuanmu sudah cukup baik. Pelajari kembali soal yang salah dan kerjakan latihan tambahan.";
+  } else {
+    recommendation =
+      "Ayo tingkatkan pemahamanmu. Mulai dari konsep dasar, baca pembahasan, lalu ulangi latihan.";
+  }
+
+  document.getElementById("recommendation").textContent =
+    recommendation;
+}
+
+// =================================
+// RIWAYAT NILAI
+// =================================
+
+function showHistory() {
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("history").classList.remove("hidden");
+
+  const history = JSON.parse(
+    localStorage.getItem("quizHistory") || "[]"
+  );
+
+  const content = document.getElementById("historyContent");
+
+  if (!history.length) {
+    content.textContent = "Belum ada riwayat latihan.";
+    return;
+  }
+
+  content.innerHTML = `
+    <table>
+      <tr>
+        <th>Nama</th>
+        <th>Pelajaran</th>
+        <th>Nilai</th>
+        <th>Tanggal</th>
+      </tr>
+      ${history.map(item => `
+        <tr>
+          <td>${escapeHTML(item.name)}</td>
+          <td>${item.subject === "math" ? "Matematika" : "Inggris"}</td>
+          <td><b>${item.score}</b></td>
+          <td>${escapeHTML(item.date)}</td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+// =================================
+// NAVIGASI
+// =================================
+
+function restartQuiz() {
+  clearInterval(timerInterval);
+  startQuiz();
+}
+
+function backHome() {
+  clearInterval(timerInterval);
+
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("history").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
+}
+
+</script>
+</body>
+</html>
